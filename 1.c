@@ -47,7 +47,7 @@ cam_read()
 		33, //params.ccdheight/32+1, // roiymax
 		1, // hbin
 		1, // vbin
-		"0,30,-1,-1" // delay and exposure times in ms 0..1000000
+		"0,20,-1,-1" // delay and exposure times in ms 0..1000000
 		);
   // roix 1..43, roiy 1..33
   // only roiy{min,max} and vbin={1,2,4,8,16} decrease readout times
@@ -73,6 +73,7 @@ cam_read()
 
   int stat;
   do{
+    usleep(1000);
     sen_get_buffer_status(hdriver,bufnr,0,&stat,sizeof(stat)); // p 34
   }while((stat & 0x0f02) == 0);
   
@@ -80,12 +81,13 @@ cam_read()
     printf("bufferstatus error-flag is set\n");
   
   if(stat&2){
-    unsigned short*picb12;
-    picb12=(unsigned short*)malloc(size);
+    static unsigned short*picb12=0;
+    if(!picb12)
+      picb12=(unsigned short*)malloc(size);
     r=sen_copy_buffer(hdriver,bufnr,picb12,size,0); //p41 last is offset
     int i;
     for(i=0;i<actx*acty;i++)
-      buf[i]=picb12[i]/2;
+      buf[i]=picb12[i]/8;
     
     assert(r>=0);
   } else { // something is wrong remove buffer
