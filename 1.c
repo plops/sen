@@ -57,7 +57,7 @@ cam_read()
   int ccdx,ccdy,actx,acty,bit_pix;
   r=sen_getsizes(hdriver,&ccdx,&ccdy,&actx,&acty,&bit_pix);
   printf("top left: %dx%d\ndimension: %dx%d\n",ccdx,ccdy,actx,acty);
-  actx++; acty++;
+  //actx++; acty++;
   struct cam_values values;
   sen_get_cam_values(hdriver,&values);
   printf("delay %.2fus, exp %.2fus, coc %.2fus\n",
@@ -85,7 +85,7 @@ cam_read()
     r=sen_copy_buffer(hdriver,bufnr,picb12,size,0); //p41 last is offset
     int i;
     for(i=0;i<actx*acty;i++)
-      buf[i]=picb12[i]/8;
+      buf[i]=picb12[i]/2;
     
     assert(r>=0);
   } else { // something is wrong remove buffer
@@ -104,23 +104,40 @@ draw (void)
   glLoadIdentity();
   glColor3d(1,1,1);
 
-  cam_read();
+  static int new=1;
+  if(new){
+    cam_read();
+    //new=0;
+  }
   glTexSubImage2D(target,0,0,
 		  0,tx,ty,GL_LUMINANCE,
 		  GL_UNSIGNED_BYTE,buf);
 
   glBegin (GL_TRIANGLE_FAN);
   glTexCoord2d (0, 0);
-  glVertex2d (0, 1);
+  glVertex2d (0, ty);
   glTexCoord2d (0, ty);
   glVertex2d (0, 0);
   glTexCoord2d (tx, ty);
-  glVertex2d (1., 0);
+  glVertex2d (tx, 0);
   glTexCoord2d (tx, 0);
-  glVertex2d (1.,1);
+  glVertex2d (tx,ty);
   glEnd ();
-
+  
+  glutSwapBuffers();
+  glutPostRedisplay();
 }
+
+void
+key(unsigned char key, int x, int y)
+{
+        switch(key){
+        case 27:
+        case 'q':
+                exit(0);
+        }
+}
+
 
 void
 initgl()
@@ -134,6 +151,7 @@ initgl()
 
   glutDisplayFunc(draw);
   glutReshapeFunc(reshape);
+  glutKeyboardFunc(key);
 
   unsigned int obj;
   glGenTextures(1,&obj);
