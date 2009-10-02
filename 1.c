@@ -29,15 +29,18 @@ void
 cam_read()
 {
   int
+//	type=M_FAST,submode=NORMALFAST,
     type=M_LONG, // 0
     gain=0, // 0 normal, 1 extended gain, 3 low light mode
     submode=
-    NORMALLONG // exposure and readout sequentially
+    //NORMALLONG // exposure and readout sequentially
     //VIDEO // no delay, simultaneous exposure and readout, not all trigmodes
     //MECHSHUT // bnc on pci board monitors exposure time, no trigmode possible
-    //QE_FAST // sequential with short exposure times
-    //QE_DOUBLE // two images, started with trig from BNC
-    ,mode=type+gain*256+submode*65536;
+    QE_FAST // sequential with short exposure times
+	// delay 0..50e6 and expos_width 500..10e6 in ns     
+//QE_DOUBLE // two images, started with trig from BNC
+    ,
+mode=type+gain*256+submode*65536;
   int r=sen_set_coc(hdriver,
 		mode, // mode
 		0, // trig and start mode
@@ -47,7 +50,7 @@ cam_read()
 		33, //params.ccdheight/32+1, // roiymax
 		1, // hbin
 		1, // vbin
-		"0,20,-1,-1" // delay and exposure times in ms 0..1000000
+		"0,30000,-1,-1" // delay and exposure times in ms 0..1000000
 		);
   // roix 1..43, roiy 1..33
   // only roiy{min,max} and vbin={1,2,4,8,16} decrease readout times
